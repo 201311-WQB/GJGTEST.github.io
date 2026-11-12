@@ -76,6 +76,10 @@
   .switch.on { background: var(--green); }
   .switch.on::after { left: 23px; }
 
+  /* 抽题数量输入 */
+  .count-input { width: 130px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff; text-align: center; }
+  .count-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(43,92,255,.12); }
+
   .btn { border: 0; border-radius: 12px; padding: 14px 24px; font-size: 16px; font-weight: 700; cursor: pointer; transition: transform .08s, box-shadow .2s, background .2s; font-family: inherit; }
   .btn:active { transform: scale(.97); }
   .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 20px rgba(43,92,255,.3); }
@@ -156,6 +160,36 @@
   .mt { margin-top: 14px; }
   .hint { font-size: 12px; color: #9ca3af; text-align: center; margin-top: 16px; }
 
+  /* 按钮组 / 描边按钮 */
+  .btn-row { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+  .btn-row .btn { flex: 1; }
+  .btn-outline { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
+  .btn-outline:hover { background: #eef3ff; }
+  .btn-subtle { background: #f8fafc; color: var(--muted); border: 1px solid var(--border); }
+
+  /* 浏览页 */
+  .browse-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .browse-toolbar .b-title { font-size: 18px; font-weight: 800; margin-right: auto; }
+  .search-box { flex: 1 1 180px; min-width: 140px; }
+  .search-box input { width: 100%; padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-family: inherit; background: #fff; }
+  .search-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(43,92,255,.12); }
+  .browse-count { font-size: 13px; color: var(--muted); font-weight: 600; margin-bottom: 14px; }
+
+  .b-item { border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; background: #fff; }
+  .b-item .b-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .b-item .b-num { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .b-item .b-q { font-size: 16px; line-height: 1.65; font-weight: 600; margin-bottom: 10px; }
+  .b-opts { display: flex; flex-direction: column; gap: 6px; }
+  .b-opt { display: flex; align-items: flex-start; gap: 8px; font-size: 14.5px; line-height: 1.55; padding: 6px 10px; border-radius: 8px; color: var(--text); }
+  .b-opt .k { flex-shrink: 0; font-weight: 700; color: var(--muted); }
+  .b-opt.is-ans { background: var(--green-bg); border: 1px solid #bbf7d0; color: #14532d; font-weight: 600; }
+  .b-opt.is-ans .k { color: var(--green); }
+  .b-ans-line { margin-top: 10px; font-size: 14.5px; font-weight: 700; color: var(--green); }
+  .b-ans-line .bad { color: var(--red); }
+
+  .b-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .b-pager .page-info { font-size: 14px; color: var(--muted); font-weight: 600; }
+
   /* ===== 响应式：平板（≤820px，含竖屏平板） ===== */
   @media (max-width: 820px) {
     .wrap { padding: 18px 14px 48px; }
@@ -195,6 +229,11 @@
     .result h2 { font-size: 22px; }
     .big-stat .n { font-size: 26px; }
     .wrong-list .wl-item { padding: 10px 12px; }
+
+    .b-item { padding: 14px 12px; }
+    .b-item .b-q { font-size: 15px; }
+    .b-opt { font-size: 14px; }
+    .btn-row { gap: 8px; }
   }
 
   /* ===== 响应式：超窄屏（≤380px） ===== */
@@ -244,6 +283,10 @@
           </div>
         </div>
         <div class="setting-row">
+          <span class="slbl">随机抽题数量</span>
+          <input type="number" id="inp-count" class="count-input" min="1" placeholder="全部" title="留空或 0 表示全部">
+        </div>
+        <div class="setting-row">
           <span class="slbl">打乱题目顺序</span>
           <div class="switch" id="sw-shuffle" role="button" aria-label="打乱顺序"></div>
         </div>
@@ -254,7 +297,11 @@
       </div>
 
       <button class="btn btn-primary btn-wide" id="btn-start">开始答题</button>
-      <div class="hint">共 <b id="st-real">0</b> 道题已内置，无需联网，直接双击即可使用</div>
+      <button class="btn btn-green btn-wide hidden" id="btn-resume">▶ 继续上次答题</button>
+      <div class="btn-row">
+        <button class="btn btn-outline" id="btn-browse">📖 浏览题库（看题看答案）</button>
+      </div>
+      <div class="hint">共 <b id="st-real">0</b> 道题已内置，无需联网，双击即可使用 · 可自定义随机抽题数量 · 进度自动保存在本机</div>
     </div>
   </div>
 
@@ -296,6 +343,27 @@
     </div>
   </div>
 
+  <!-- 浏览页 -->
+  <div class="card hidden" id="page-browse">
+    <div class="browse-toolbar">
+      <div class="b-title">📖 浏览题库（显示答案）</div>
+      <div class="seg" id="seg-btype">
+        <button data-v="all" class="on">全部</button>
+        <button data-v="choice">选择题</button>
+        <button data-v="judge">判断题</button>
+      </div>
+      <div class="search-box"><input type="text" id="b-search" placeholder="🔍 搜索题干关键词…"></div>
+    </div>
+    <div class="browse-count" id="b-count"></div>
+    <div id="b-list"></div>
+    <div class="b-pager">
+      <button class="btn btn-ghost btn-sm" id="b-prev">← 上一页</button>
+      <span class="page-info">第 <b id="b-cur">1</b> / <b id="b-total">1</b> 页</span>
+      <button class="btn btn-ghost btn-sm" id="b-next">下一页 →</button>
+      <button class="btn btn-outline btn-sm" id="b-back">返回首页</button>
+    </div>
+  </div>
+
   <!-- 弹窗 -->
   <div class="overlay" id="overlay">
     <div class="modal">
@@ -333,10 +401,10 @@
   /* ===== 组装题库 ===== */
   var ALL = [];
   RAW.choice.forEach(function (q) {
-    ALL.push({ type: "choice", num: q.n, q: q.q, opts: q.opts, ans: q.ans });
+    ALL.push({ id: ALL.length, type: "choice", num: q.n, q: q.q, opts: q.opts, ans: q.ans });
   });
   RAW.judge.forEach(function (q) {
-    ALL.push({ type: "judge", num: q.n, q: q.q, ans: q.ans });
+    ALL.push({ id: ALL.length, type: "judge", num: q.n, q: q.q, ans: q.ans });
   });
 
   var nChoice = RAW.choice.length, nJudge = RAW.judge.length;
@@ -349,12 +417,20 @@
   var typeFilter = "all";     // all | choice | judge
   var doShuffle = false;
   var autoNext = true;
+  var quizCount = 0;          // 随机抽题数量（0=全部）
   var list = [];              // 当前作答列表
   var idx = 0;
   var stats = { ok: 0, bad: 0 };
   var answeredCount = 0;
   var currentAnswered = false;
-  var wrongItems = [];        // {q, type, ans, opts, num}
+  var wrongItems = [];        // {id, q, type, ans, opts, num}
+  var quizActive = false;     // 是否有进行中的答题（用于进度保存）
+
+  /* ===== 浏览模式状态 ===== */
+  var bTypeFilter = "all";
+  var bQuery = "";
+  var bPage = 0;
+  var B_PER_PAGE = 50;
 
   /* ===== 设置交互 ===== */
   var segType = $("seg-type");
@@ -372,18 +448,26 @@
     autoNext = !autoNext;
     $("sw-auto").classList.toggle("on", autoNext);
   });
+  $("inp-count").addEventListener("input", function () {
+    var v = parseInt($("inp-count").value, 10);
+    quizCount = (v > 0) ? v : 0;
+  });
 
   /* ===== 建立作答列表 ===== */
   function buildList() {
     var src = ALL;
     if (typeFilter === "choice") src = ALL.filter(function (q) { return q.type === "choice"; });
     else if (typeFilter === "judge") src = ALL.filter(function (q) { return q.type === "judge"; });
+    // 随机抽取指定数量（不重复）
+    if (quizCount > 0 && quizCount < src.length) {
+      src = shuffle(src).slice(0, quizCount);
+    }
     list = doShuffle ? shuffle(src) : src;
   }
 
   /* ===== 页面切换 ===== */
   function showPage(id) {
-    ["page-start", "page-quiz", "page-result"].forEach(function (p) {
+    ["page-start", "page-quiz", "page-result", "page-browse"].forEach(function (p) {
       $(p).classList.toggle("hidden", p !== id);
     });
     var inQuiz = (id === "page-quiz");
@@ -490,7 +574,7 @@
     } else {
       stats.bad++;
       var wrongRec = {
-        type: q.type, num: q.num, q: q.q, ans: q.ans,
+        id: q.id, type: q.type, num: q.num, q: q.q, ans: q.ans,
         opts: q.type === "choice" ? q.opts : null
       };
       wrongItems.push(wrongRec);
@@ -500,6 +584,7 @@
       showModal(q);
     }
     updateScore();
+    saveProgress();
   }
 
   function formatAnswer(q) {
@@ -540,8 +625,10 @@
     buildList();
     if (!list.length) { alert("当前筛选下没有题目"); return; }
     idx = 0; stats = { ok: 0, bad: 0 }; answeredCount = 0; wrongItems = [];
+    quizActive = true;
     showPage("page-quiz");
     render();
+    saveProgress();
   });
 
   function finish() {
@@ -574,6 +661,9 @@
     } else {
       ww.classList.add("hidden");
     }
+    quizActive = false;
+    list = [];
+    saveProgress();
   }
 
   function escapeHtml(s) {
@@ -582,17 +672,197 @@
     });
   }
 
+  /* ===== 浏览模式 ===== */
+  function getBrowseSource() {
+    var src = ALL;
+    if (bTypeFilter === "choice") src = ALL.filter(function (q) { return q.type === "choice"; });
+    else if (bTypeFilter === "judge") src = ALL.filter(function (q) { return q.type === "judge"; });
+    var kw = bQuery.trim();
+    if (kw) src = src.filter(function (q) { return q.q.indexOf(kw) >= 0; });
+    return src;
+  }
+
+  function renderBrowse() {
+    var src = getBrowseSource();
+    var totalPages = Math.max(1, Math.ceil(src.length / B_PER_PAGE));
+    if (bPage >= totalPages) bPage = totalPages - 1;
+    if (bPage < 0) bPage = 0;
+    var start = bPage * B_PER_PAGE;
+    var pageItems = src.slice(start, start + B_PER_PAGE);
+
+    $("b-count").textContent = "共 " + src.length + " 道题（已标出正确答案，供浏览记忆）";
+    $("b-cur").textContent = bPage + 1;
+    $("b-total").textContent = totalPages;
+    $("b-prev").disabled = (bPage === 0);
+    $("b-next").disabled = (bPage >= totalPages - 1);
+
+    var box = $("b-list");
+    box.innerHTML = "";
+    var frag = document.createDocumentFragment();
+    pageItems.forEach(function (q) {
+      var item = document.createElement("div");
+      item.className = "b-item";
+      var head = document.createElement("div");
+      head.className = "b-head";
+      var tag = document.createElement("span");
+      tag.className = q.type === "choice" ? "tag tag-choice" : "tag tag-judge";
+      tag.textContent = q.type === "choice" ? "选择题" : "判断题";
+      var num = document.createElement("span");
+      num.className = "b-num";
+      num.textContent = "序号 " + q.num;
+      head.appendChild(tag); head.appendChild(num);
+      item.appendChild(head);
+
+      var qEl = document.createElement("div");
+      qEl.className = "b-q";
+      qEl.textContent = q.q;
+      item.appendChild(qEl);
+
+      if (q.type === "choice") {
+        var optsBox = document.createElement("div");
+        optsBox.className = "b-opts";
+        ["A", "B", "C", "D"].forEach(function (k) {
+          var o = document.createElement("div");
+          o.className = "b-opt" + (k === q.ans ? " is-ans" : "");
+          var kk = document.createElement("span");
+          kk.className = "k";
+          kk.textContent = k + ".";
+          var tt = document.createElement("span");
+          tt.textContent = q.opts["ABCD".indexOf(k)];
+          o.appendChild(kk); o.appendChild(tt);
+          optsBox.appendChild(o);
+        });
+        item.appendChild(optsBox);
+      } else {
+        var al = document.createElement("div");
+        al.className = "b-ans-line";
+        al.innerHTML = '答案：' + (q.ans === "√"
+          ? '<span>正确（√）</span>'
+          : '<span class="bad">错误（×）</span>');
+        item.appendChild(al);
+      }
+      frag.appendChild(item);
+    });
+    box.appendChild(frag);
+  }
+
+  $("btn-browse").addEventListener("click", function () {
+    showPage("page-browse");
+    renderBrowse();
+  });
+  $("seg-btype").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    bTypeFilter = b.dataset.v;
+    bPage = 0;
+    $("seg-btype").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    renderBrowse();
+    saveProgress();
+  });
+  var bSearchTimer = null;
+  $("b-search").addEventListener("input", function () {
+    bQuery = $("b-search").value;
+    bPage = 0;
+    clearTimeout(bSearchTimer);
+    bSearchTimer = setTimeout(function () { renderBrowse(); saveProgress(); }, 200);
+  });
+  $("b-prev").addEventListener("click", function () { if (bPage > 0) { bPage--; renderBrowse(); saveProgress(); } });
+  $("b-next").addEventListener("click", function () { bPage++; renderBrowse(); saveProgress(); });
+  $("b-back").addEventListener("click", function () { showPage("page-start"); });
+
+  /* ===== 学习进度：自动保存 ===== */
+  var STORAGE_KEY = "gjg_ll_progress_v1";
+
+  function buildProgress() {
+    return {
+      v: 1,
+      savedAt: new Date().toISOString(),
+      quiz: (quizActive && list.length) ? {
+        typeFilter: typeFilter, doShuffle: doShuffle, autoNext: autoNext, count: quizCount,
+        order: list.map(function (q) { return q.id; }),
+        idx: idx, ok: stats.ok, bad: stats.bad,
+        wrongIds: wrongItems.map(function (w) { return w.id; }),
+      } : null,
+      browse: { typeFilter: bTypeFilter, query: bQuery, page: bPage },
+    };
+  }
+
+  function saveProgress() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(buildProgress())); } catch (e) {}
+  }
+
+  function syncTypeUI() {
+    $("seg-type").querySelectorAll("button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.v === typeFilter);
+    });
+  }
+  function syncBrowseTypeUI() {
+    $("seg-btype").querySelectorAll("button").forEach(function (b) {
+      b.classList.toggle("on", b.dataset.v === bTypeFilter);
+    });
+  }
+
+  function applyProgress(p) {
+    if (p.browse) {
+      bTypeFilter = p.browse.typeFilter || "all";
+      bQuery = p.browse.query || "";
+      bPage = p.browse.page || 0;
+      $("b-search").value = bQuery;
+      syncBrowseTypeUI();
+    }
+    if (p.quiz && p.quiz.order && p.quiz.order.length) {
+      var idMap = {};
+      ALL.forEach(function (q) { idMap[q.id] = q; });
+      var l = p.quiz.order.map(function (id) { return idMap[id]; }).filter(Boolean);
+      if (l.length) {
+        list = l;
+        idx = Math.min(p.quiz.idx || 0, list.length - 1);
+        stats.ok = p.quiz.ok || 0;
+        stats.bad = p.quiz.bad || 0;
+        wrongItems = (p.quiz.wrongIds || []).map(function (id) { return idMap[id]; }).filter(Boolean);
+        typeFilter = p.quiz.typeFilter || "all";
+        doShuffle = !!p.quiz.doShuffle;
+        autoNext = p.quiz.autoNext !== false;
+        quizCount = p.quiz.count || 0;
+        $("inp-count").value = quizCount || "";
+        syncTypeUI();
+        $("sw-shuffle").classList.toggle("on", doShuffle);
+        $("sw-auto").classList.toggle("on", autoNext);
+        quizActive = true;
+        $("btn-resume").style.display = "";
+        $("btn-resume").textContent = "▶ 继续上次答题（第 " + (idx + 1) + " / " + list.length + " 题）";
+      }
+    }
+  }
+
+  function loadProgress() {
+    var raw = null;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { return; }
+    if (!raw) return;
+    try {
+      var p = JSON.parse(raw);
+      if (p && p.v === 1) applyProgress(p);
+    } catch (e) {}
+  }
+
+  $("btn-resume").addEventListener("click", function () {
+    if (!list.length) return;
+    showPage("page-quiz");
+    render();
+  });
+
   $("btn-restart").addEventListener("click", function () { showPage("page-start"); });
   $("btn-redo").addEventListener("click", function () {
     if (!wrongItems.length) { alert("没有错题，不需要重做"); return; }
     // 用错题重建列表
-    list = wrongItems.map(function (w, i) {
-      return { type: w.type, num: w.num, q: w.q, opts: w.opts, ans: w.ans, __redo: true };
+    list = wrongItems.map(function (w) {
+      return { id: w.id, type: w.type, num: w.num, q: w.q, opts: w.opts, ans: w.ans };
     });
-    // 保留来源序号显示
     idx = 0; stats = { ok: 0, bad: 0 }; answeredCount = 0; wrongItems = [];
+    quizActive = true;
     showPage("page-quiz");
     render();
+    saveProgress();
   });
 
   /* ===== 键盘快捷键 ===== */
@@ -622,6 +892,7 @@
 
   /* 初始化显示开始页 */
   showPage("page-start");
+  loadProgress();
 })();
 </script>
 </body>
