@@ -189,6 +189,9 @@
 
   .b-pager { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
   .b-pager .page-info { font-size: 14px; color: var(--muted); font-weight: 600; }
+  .b-pager .b-jump-wrap { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--muted); font-weight: 600; }
+  .b-pager .b-jump { padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; color: var(--text); }
+  .b-pager .b-jump:focus { outline: none; border-color: var(--primary); }
 
   /* ===== 响应式：平板（≤820px，含竖屏平板） ===== */
   @media (max-width: 820px) {
@@ -360,6 +363,7 @@
       <button class="btn btn-ghost btn-sm" id="b-prev">← 上一页</button>
       <span class="page-info">第 <b id="b-cur">1</b> / <b id="b-total">1</b> 页</span>
       <button class="btn btn-ghost btn-sm" id="b-next">下一页 →</button>
+      <span class="b-jump-wrap">跳至 <select id="b-jump" class="b-jump" title="选择页码直接跳转"></select> 页</span>
       <button class="btn btn-outline btn-sm" id="b-back">返回首页</button>
     </div>
   </div>
@@ -696,6 +700,16 @@
     $("b-prev").disabled = (bPage === 0);
     $("b-next").disabled = (bPage >= totalPages - 1);
 
+    var jump = $("b-jump");
+    jump.innerHTML = "";
+    for (var i = 1; i <= totalPages; i++) {
+      var opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = i;
+      jump.appendChild(opt);
+    }
+    jump.value = String(bPage + 1);
+
     var box = $("b-list");
     box.innerHTML = "";
     var frag = document.createDocumentFragment();
@@ -768,6 +782,13 @@
   });
   $("b-prev").addEventListener("click", function () { if (bPage > 0) { bPage--; renderBrowse(); saveProgress(); } });
   $("b-next").addEventListener("click", function () { bPage++; renderBrowse(); saveProgress(); });
+  $("b-jump").addEventListener("change", function () {
+    var v = parseInt($("b-jump").value, 10);
+    if (isNaN(v)) return;
+    bPage = v - 1;
+    renderBrowse();
+    saveProgress();
+  });
   $("b-back").addEventListener("click", function () { showPage("page-start"); });
 
   /* ===== 学习进度：自动保存 ===== */
